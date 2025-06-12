@@ -43,12 +43,26 @@ jobs:
 
       - name: Create new task definition revision
         run: |
-          jq --arg IMAGE "$IMAGE_URI" '.containerDefinitions[0].image = $IMAGE' task-def.json > new-task-def.json
+          IMAGE_URI=${{ env.IMAGE_URI }}
+
+          jq --arg IMAGE "$IMAGE_URI" '{
+            family: .family,
+            taskRoleArn: .taskRoleArn,
+            executionRoleArn: .executionRoleArn,
+            networkMode: .networkMode,
+            containerDefinitions: (.containerDefinitions | map(.image = $IMAGE)),
+            requiresCompatibilities: .requiresCompatibilities,
+            cpu: .cpu,
+            memory: .memory
+          }' task-def.json > new-task-def.json
+
           TASK_DEF_ARN=$(aws ecs register-task-definition \
             --cli-input-json file://new-task-def.json \
             --query "taskDefinition.taskDefinitionArn" \
             --output text)
+
           echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
+          
 
       - name: Update ECS service
         run: |
