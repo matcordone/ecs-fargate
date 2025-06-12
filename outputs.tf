@@ -22,3 +22,6 @@ output "sg_ecs" {
 output "name_alb" {
   value = aws_alb.alb_ecs.dns_name
 }
+output "task_id" {
+  value = aws_ecs_task_definition.ecs_task.id
+}
